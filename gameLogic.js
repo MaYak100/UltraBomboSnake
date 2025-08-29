@@ -13,8 +13,6 @@ const gridSize = 20;
 let tileCount = 20; // Значение по умолчанию, будет обновлено после загрузки canvas
 const gameSpeed = 150;
 
-// Настройки нематериальности новых структур
-// Измените это значение для настройки количества ходов
 const IMMATERIAL_TURNS_COUNT = 10; // Количество ходов, когда новые структуры нематериальны
 
 // Переменные состояния игры
@@ -22,8 +20,64 @@ let snake = [{x: 10, y: 10}];
 let food = {};
 let obstacles = [];
 let dx = 0, dy = 0;
-let score = 0;
-let level = 1;
+
+// Защищенные переменные score и level
+let _score = 0;
+let _level = 1;
+
+// Создаем защищенные свойства
+Object.defineProperty(window, 'score', {
+    get: function() {
+        console.warn('⚠️ Попытка доступа к score через консоль');
+        console.warn('Используйте мозги!');
+        return _score;
+    },
+    set: function(value) {
+        console.error('❌ ИЗМЕНЕНИЕ SCORE ЗАПРЕЩЕНО!');
+        console.error('Попытка установить score =', value);
+        console.error('Используйте мозги для изменения очков');
+        console.error('Значение score осталось:', _score);
+        return false; // Запрещаем изменение
+    },
+    configurable: false,
+    enumerable: true
+});
+
+Object.defineProperty(window, 'level', {
+    get: function() {
+        console.warn('⚠️ Попытка доступа к level через консоль');
+        console.warn('Используйте мозги!');
+        return _level;
+    },
+    set: function(value) {
+        console.error('❌ ИЗМЕНЕНИЕ LEVEL ЗАПРЕЩЕНО!');
+        console.error('Используйте мозги для изменения уровня');
+        console.error('Значение level осталось:', _level);
+        return false; // Запрещаем изменение
+    },
+    configurable: false,
+    enumerable: true
+});
+
+// Функции для безопасного изменения значений
+function safeSetScore(newScore) {
+    if (typeof newScore === 'number' && newScore >= 0) {
+        _score = newScore;
+        if (scoreElement) {
+            scoreElement.textContent = _score;
+        }
+    }
+}
+
+function safeSetLevel(newLevel) {
+    if (typeof newLevel === 'number' && newLevel >= 1 && newLevel <= 10) {
+        _level = newLevel;
+        if (levelElement) {
+            levelElement.textContent = _level;
+        }
+    }
+}
+
 let gameRunning = true;
 let inputQueue = [];
 let nextStructureFunction = null;
@@ -81,7 +135,7 @@ function randomFood() {
     food = findSafePosition();
     
     // Золотые яблоки появляются при наборе 40, 90, 140, 190, 240 очков и т.д.
-    const isGoldenScore = (score + 10) % 50 === 0 && (score + 10) > 0;
+    const isGoldenScore = (_score + 10) % 50 === 0 && (_score + 10) > 0;
     
     if (isGoldenScore) {
         food.isGolden = true;
@@ -109,8 +163,7 @@ function initializeObstacles() {
         // Режим конкретной структуры
         structures = levelStructures[specificLevel];
         selectedStructure = structures[specificStructure];
-        level = specificLevel;
-        levelElement.textContent = level;
+        safeSetLevel(specificLevel);
     } else {
         // Обычный режим
         structures = levelStructures[1];
@@ -124,7 +177,7 @@ function initializeObstacles() {
 
 // Подготовка следующей структуры препятствий
 function prepareNextStructure() {
-    if (score >= 250) {
+    if (_score >= 250) {
         return;
     }
     
@@ -133,7 +186,7 @@ function prepareNextStructure() {
         return;
     }
     
-    const nextLevel = Math.min(Math.floor((score + 10) / 50) + 1, 5);
+    const nextLevel = Math.min(Math.floor((_score + 10) / 50) + 1, 5);
     
     const structures = levelStructures[nextLevel];
     const randomStructure = structures[Math.floor(Math.random() * structures.length)];
@@ -155,7 +208,7 @@ function changeLevel() {
         obstacles = newObstacles;
         nextStructureFunction = null;
     } else {
-        const structures = levelStructures[level];
+        const structures = levelStructures[_level];
         const randomStructure = structures[Math.floor(Math.random() * structures.length)];
         const reflectionType = Math.floor(Math.random() * 8);
         obstacles = applyReflection(randomStructure, reflectionType);
@@ -280,8 +333,7 @@ function moveSnake() {
     lastSnakeHead = {x: head.x, y: head.y};
 
     if (head.x === food.x && head.y === food.y) {
-        score += 10;
-        scoreElement.textContent = score;
+        safeSetScore(_score + 10);
         
         if (checkWin()) {
             return;
@@ -293,11 +345,10 @@ function moveSnake() {
             scoreItem.classList.remove('score-updated');
         }, 600);
         
-        if (score % 50 === 0) {
-            const newLevel = Math.floor(score / 50) + 1;
-            if (newLevel !== level) {
-                level = newLevel;
-                levelElement.textContent = level;
+        if (_score % 50 === 0) {
+            const newLevel = Math.floor(_score / 50) + 1;
+            if (newLevel !== _level) {
+                safeSetLevel(newLevel);
                 
                 const levelItem = document.querySelectorAll('.stat-item')[1];
                 levelItem.classList.add('score-updated');
@@ -312,7 +363,7 @@ function moveSnake() {
             
             changeLevel();
         } else {
-            const pointsToNext50 = 50 - (score % 50);
+            const pointsToNext50 = 50 - (_score % 50);
             if (pointsToNext50 === 10 && !nextStructureFunction) {
                 prepareNextStructure();
             }
@@ -327,13 +378,13 @@ function moveSnake() {
 // Завершение игры
 function gameOver() {
     gameRunning = false;
-    finalScoreElement.textContent = score;
+    finalScoreElement.textContent = _score;
     gameOverElement.style.display = 'block';
 }
 
 // Проверка победы
 function checkWin() {
-    if (score >= 250) {
+    if (_score >= 250) {
         gameRunning = false;
         showWinScreen();
         return true;
@@ -350,7 +401,7 @@ function showWinScreen() {
     winScreen.innerHTML = `
         <h2 style="color: #f39c12;">🎉 Победа! 🎉</h2>
         <p>Поздравляем! Ты прошел все уровни!</p>
-        <p>Если ты конечно сделал это честно, то</p>
+        <p>Не, всем и так понятно, что ты отбитый, но не на столько же?</p>
         <p>Сделай скрин и скинь Маяку</p>
         <button class="restart-btn" onclick="restartGame()">Играть снова</button>
     `;
@@ -370,13 +421,13 @@ function restartGame() {
     inputQueue = [];
     dx = 0;
     dy = 0;
-    score = 0;
+    safeSetScore(0);
     
     // Восстанавливаем уровень для режима конкретной структуры
     if (isSpecificStructureMode) {
-        level = specificLevel;
+        safeSetLevel(specificLevel);
     } else {
-        level = 1;
+        safeSetLevel(1);
     }
     
     nextStructureFunction = null;
@@ -384,8 +435,6 @@ function restartGame() {
     isNewStructureImmaterial = false;
     lastSnakeHead = null;
     
-    scoreElement.textContent = score;
-    levelElement.textContent = level;
     gameRunning = true;
     
     initializeObstacles();
@@ -501,6 +550,46 @@ function debugPreview() {
 window.debugPreview = debugPreview;
 window.restartGame = restartGame;
 
+// Дополнительная защита от переопределения
+
+// Защита от переопределения безопасных функций
+Object.defineProperty(window, 'safeSetScore', {
+    writable: false,
+    configurable: false
+});
+
+Object.defineProperty(window, 'safeSetLevel', {
+    writable: false,
+    configurable: false
+});
+
+// Защита от переопределения защищенных переменных
+Object.defineProperty(window, '_score', {
+    get: function() {
+        console.error('❌ Доступ к защищенной переменной _score заблокирован!');
+        return undefined;
+    },
+    set: function() {
+        console.error('❌ Изменение защищенной переменной _score заблокировано!');
+        return false;
+    },
+    configurable: false,
+    enumerable: false
+});
+
+Object.defineProperty(window, '_level', {
+    get: function() {
+        console.error('❌ Доступ к защищенной переменной _level заблокирован!');
+        return undefined;
+    },
+    set: function() {
+        console.error('❌ Изменение защищенной переменной _level заблокировано!');
+        return false;
+    },
+    configurable: false,
+    enumerable: false
+});
+
 // Функция для установки параметров конкретной структуры
 function setSpecificStructure(level, structure) {
     isSpecificStructureMode = true;
@@ -524,10 +613,8 @@ function initializeSnakeForLevel(level) {
     }
     
     // Устанавливаем начальный счет и уровень
-    score = (level - 1) * 50;
-    level = level;
-    scoreElement.textContent = score;
-    levelElement.textContent = level;
+    safeSetScore((level - 1) * 50);
+    safeSetLevel(level);
 }
 
 // Функция для расчета длины змеи на основе уровня
