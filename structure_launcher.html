@@ -271,8 +271,6 @@
             
             // Обновляем информацию
             const scoreForLevel = (level - 1) * 50;
-            const nextLevelScore = level * 50;
-            const pointsToNext = nextLevelScore - scoreForLevel;
             infoContainer.innerHTML = `
                 <strong>Длина змеи:</strong> ${snakeLength} сегментов<br>
                 <strong>Очки для уровня:</strong> ${scoreForLevel}<br>

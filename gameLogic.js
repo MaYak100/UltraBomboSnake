@@ -177,11 +177,12 @@ function initializeObstacles() {
 
 // Подготовка следующей структуры препятствий
 function prepareNextStructure() {
-    if (_score >= 250) {
+    // В обычном режиме останавливаемся на 250 очках
+    if (!isSpecificStructureMode && _score >= 250) {
         return;
     }
     
-    // В режиме конкретной структуры не меняем препятствия
+    // В режиме структурного лаунчера структуры НЕ меняются
     if (isSpecificStructureMode) {
         return;
     }
@@ -384,6 +385,11 @@ function gameOver() {
 
 // Проверка победы
 function checkWin() {
+    // В режиме структурного лаунчера нет победы - игра бесконечная
+    if (isSpecificStructureMode) {
+        return false;
+    }
+    
     if (_score >= 250) {
         gameRunning = false;
         showWinScreen();
