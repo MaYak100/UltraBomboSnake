@@ -11,7 +11,7 @@ const finalScoreElement = document.getElementById('finalScore');
 // Константы игры
 const gridSize = 20;
 let tileCount = 20; // Значение по умолчанию, будет обновлено после загрузки canvas
-const gameSpeed = 130;
+const gameSpeed = 135;
 
 // Переменные состояния игры
 let snake = [{x: 10, y: 10}];
