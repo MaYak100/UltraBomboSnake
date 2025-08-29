@@ -11,7 +11,11 @@ const finalScoreElement = document.getElementById('finalScore');
 // Константы игры
 const gridSize = 20;
 let tileCount = 20; // Значение по умолчанию, будет обновлено после загрузки canvas
-const gameSpeed = 135;
+const gameSpeed = 150;
+
+// Настройки нематериальности новых структур
+// Измените это значение для настройки количества ходов
+const IMMATERIAL_TURNS_COUNT = 10; // Количество ходов, когда новые структуры нематериальны
 
 // Переменные состояния игры
 let snake = [{x: 10, y: 10}];
@@ -22,12 +26,15 @@ let score = 0;
 let level = 1;
 let gameRunning = true;
 let inputQueue = [];
-let previewObstacles = [];
-let showPreview = false;
 let nextStructureFunction = null;
 let immaterialTurns = 0; 
-const IMMATERIAL_TURNS_COUNT = 1000; 
 let lastSnakeHead = null; 
+let isNewStructureImmaterial = false; // Флаг для новых структур
+
+// Переменные для запуска с конкретной структурой
+let isSpecificStructureMode = false;
+let specificLevel = 1;
+let specificStructure = 0;
 
 // Поиск безопасной позиции для еды
 function findSafePosition() {
@@ -73,7 +80,10 @@ function findSafeStartPosition() {
 function randomFood() {
     food = findSafePosition();
     
-    if (score >= 190) {
+    // Золотые яблоки появляются при наборе 40, 90, 140, 190, 240 очков и т.д.
+    const isGoldenScore = (score + 10) % 50 === 0 && (score + 10) > 0;
+    
+    if (isGoldenScore) {
         food.isGolden = true;
     } else {
         food.isGolden = false;
@@ -93,15 +103,33 @@ function randomFood() {
 
 // Инициализация препятствий для первого уровня
 function initializeObstacles() {
-    const structures = levelStructures[1];
-    const randomStructure = structures[Math.floor(Math.random() * structures.length)];
+    let structures, selectedStructure;
+    
+    if (isSpecificStructureMode) {
+        // Режим конкретной структуры
+        structures = levelStructures[specificLevel];
+        selectedStructure = structures[specificStructure];
+        level = specificLevel;
+        levelElement.textContent = level;
+    } else {
+        // Обычный режим
+        structures = levelStructures[1];
+        selectedStructure = structures[Math.floor(Math.random() * structures.length)];
+    }
+    
+    // Применяем случайную ротацию
     const reflectionType = Math.floor(Math.random() * 8);
-    obstacles = applyReflection(randomStructure, reflectionType);
+    obstacles = applyReflection(selectedStructure, reflectionType);
 }
 
-// Генерация предварительного просмотра препятствий
-function generatePreviewForNextChange() {
-    if (score >= 240) {
+// Подготовка следующей структуры препятствий
+function prepareNextStructure() {
+    if (score >= 250) {
+        return;
+    }
+    
+    // В режиме конкретной структуры не меняем препятствия
+    if (isSpecificStructureMode) {
         return;
     }
     
@@ -113,32 +141,19 @@ function generatePreviewForNextChange() {
     const reflectionType = Math.floor(Math.random() * 8);
     
     nextStructureFunction = () => applyReflection(randomStructure, reflectionType);
-    
-    previewObstacles = applyReflection(randomStructure, reflectionType);
-    showPreview = true;
-    
-    if (previewObstacles.length === 0) {
-        return;
-    }
 }
 
 // Смена уровня
 function changeLevel() {
+    // В режиме конкретной структуры не меняем препятствия
+    if (isSpecificStructureMode) {
+        return;
+    }
+    
     if (nextStructureFunction) {
         const newObstacles = nextStructureFunction();
         obstacles = newObstacles;
         nextStructureFunction = null;
-        
-        if (previewObstacles.length > 0) {
-            const previewMatch = previewObstacles.length === obstacles.length && 
-                previewObstacles.every((preview, index) => 
-                    preview.x === obstacles[index].x && preview.y === obstacles[index].y
-                );
-            
-            if (!previewMatch) {
-                // Структура не совпадает с предварительным просмотром
-            }
-        }
     } else {
         const structures = levelStructures[level];
         const randomStructure = structures[Math.floor(Math.random() * structures.length)];
@@ -146,10 +161,9 @@ function changeLevel() {
         obstacles = applyReflection(randomStructure, reflectionType);
     }
     
+    // Новые структуры становятся нематериальными на 4 хода
+    isNewStructureImmaterial = true;
     immaterialTurns = IMMATERIAL_TURNS_COUNT;
-    
-    showPreview = false;
-    previewObstacles = [];
     
     let attempts = 0;
     while (obstacles.some(obs => obs.x === food.x && obs.y === food.y) && attempts < 10) {
@@ -209,29 +223,25 @@ function drawGame() {
     
     ctx.shadowBlur = 0;
 
-    ctx.fillStyle = '#8e44ad';
+    // Отрисовка препятствий
     obstacles.forEach(obstacle => {
         const x = obstacle.x * gridSize;
         const y = obstacle.y * gridSize;
         const size = gridSize - 2;
         
+        // Если структура новая и нематериальная - рисуем полупрозрачно
+        if (isNewStructureImmaterial && immaterialTurns > 0) {
+            ctx.fillStyle = 'rgba(142, 68, 173, 0.4)'; // Полупрозрачный фиолетовый
+        } else {
+            ctx.fillStyle = '#8e44ad'; // Обычный фиолетовый
+        }
+        
         ctx.beginPath();
         ctx.roundRect(x, y, size, size, 2);
         ctx.fill();
     });
+    
 
-    if (showPreview && previewObstacles.length > 0) {
-        ctx.fillStyle = 'rgba(142, 68, 173, 0.4)';
-        previewObstacles.forEach(obstacle => {
-            const x = obstacle.x * gridSize;
-            const y = obstacle.y * gridSize;
-            const size = gridSize - 2;
-            
-            ctx.beginPath();
-            ctx.roundRect(x, y, size, size, 2);
-            ctx.fill();
-        });
-    }
 }
 
 // Обработка движения змейки
@@ -252,7 +262,7 @@ function moveSnake() {
 
     if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount ||
         snake.some(segment => head.x === segment.x && head.y === segment.y) ||
-        (immaterialTurns === 0 && obstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y))) {
+        (!isNewStructureImmaterial && obstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y))) {
         gameOver();
         return;
     }
@@ -260,8 +270,11 @@ function moveSnake() {
     snake.unshift(head);
 
     if (lastSnakeHead && (head.x !== lastSnakeHead.x || head.y !== lastSnakeHead.y)) {
-        if (immaterialTurns > 0) {
+        if (isNewStructureImmaterial && immaterialTurns > 0) {
             immaterialTurns--;
+            if (immaterialTurns === 0) {
+                isNewStructureImmaterial = false; // Структура больше не нематериальна
+            }
         }
     }
     lastSnakeHead = {x: head.x, y: head.y};
@@ -293,15 +306,15 @@ function moveSnake() {
                 }, 600);
             }
             
-            if (!showPreview && !nextStructureFunction) {
-                generatePreviewForNextChange();
+            if (!nextStructureFunction) {
+                prepareNextStructure();
             }
             
             changeLevel();
         } else {
             const pointsToNext50 = 50 - (score % 50);
-            if (pointsToNext50 === 10 && !showPreview) {
-                generatePreviewForNextChange();
+            if (pointsToNext50 === 10 && !nextStructureFunction) {
+                prepareNextStructure();
             }
         }
         
@@ -353,15 +366,21 @@ function restartGame() {
     }
     
     obstacles = [];
-    previewObstacles = [];
     inputQueue = [];
     dx = 0;
     dy = 0;
     score = 0;
-    level = 1;
-    showPreview = false;
+    
+    // Восстанавливаем уровень для режима конкретной структуры
+    if (isSpecificStructureMode) {
+        level = specificLevel;
+    } else {
+        level = 1;
+    }
+    
     nextStructureFunction = null;
     immaterialTurns = 0;
+    isNewStructureImmaterial = false;
     lastSnakeHead = null;
     
     scoreElement.textContent = score;
@@ -369,8 +388,16 @@ function restartGame() {
     gameRunning = true;
     
     initializeObstacles();
-    const safeStart = findSafeStartPosition();
-    snake = [{x: safeStart.x, y: safeStart.y}];
+    
+    // Если в режиме конкретной структуры, инициализируем змею с нужной длиной
+    if (isSpecificStructureMode) {
+        initializeSnakeForLevel(specificLevel);
+    } else {
+        // Обычная инициализация для первого уровня
+        const safeStart = findSafeStartPosition();
+        snake = [{x: safeStart.x, y: safeStart.y}];
+    }
+    
     randomFood();
 }
 
@@ -444,7 +471,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 
 // Валидация структур уровней
 function validateLevelStructures() {
-    for (let level = 1; level <= 4; level++) {
+    for (let level = 1; level <= 5; level++) {
         if (!levelStructures[level] || !Array.isArray(levelStructures[level])) {
             return false;
         }
@@ -473,15 +500,77 @@ function debugPreview() {
 window.debugPreview = debugPreview;
 window.restartGame = restartGame;
 
+// Функция для установки параметров конкретной структуры
+function setSpecificStructure(level, structure) {
+    isSpecificStructureMode = true;
+    specificLevel = level;
+    specificStructure = structure;
+}
+
+// Функция для инициализации змеи с длиной, соответствующей уровню
+function initializeSnakeForLevel(level) {
+    const safeStart = findSafeStartPosition();
+    const snakeLength = calculateSnakeLengthForLevel(level);
+    
+    // Создаем змею с нужной длиной
+    snake = [];
+    for (let i = 0; i < snakeLength; i++) {
+        // Размещаем сегменты змеи в ряд, начиная с головы
+        snake.push({
+            x: safeStart.x - i,
+            y: safeStart.y
+        });
+    }
+    
+    // Устанавливаем начальный счет и уровень
+    score = (level - 1) * 50;
+    level = level;
+    scoreElement.textContent = score;
+    levelElement.textContent = level;
+}
+
+// Функция для расчета длины змеи на основе уровня
+function calculateSnakeLengthForLevel(level) {
+    // Начальная длина змеи - 1 сегмент
+    // Каждые 50 очков уровень увеличивается
+    // Каждые 10 очков змея растет на 1 сегмент
+    // Для уровня N нужно (N-1) * 50 очков
+    const scoreForLevel = (level - 1) * 50;
+    const segmentsForScore = Math.floor(scoreForLevel / 10);
+    return 1 + segmentsForScore; // +1 для начального сегмента
+}
+
 // Инициализация игры после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
     // Обновляем tileCount после загрузки canvas
     tileCount = canvas.width / gridSize;
     
+    // Проверяем, есть ли параметры для запуска с конкретной структурой
+    const launchSpecific = localStorage.getItem('launchSpecificStructure');
+    if (launchSpecific === 'true') {
+        const selectedLevel = parseInt(localStorage.getItem('selectedLevel')) || 1;
+        const selectedStructure = parseInt(localStorage.getItem('selectedStructure')) || 0;
+        
+        setSpecificStructure(selectedLevel, selectedStructure);
+        
+        // Очищаем localStorage
+        localStorage.removeItem('launchSpecificStructure');
+        localStorage.removeItem('selectedLevel');
+        localStorage.removeItem('selectedStructure');
+    }
+    
     validateLevelStructures();
     initializeObstacles();
-    const safeStart = findSafeStartPosition();
-    snake = [{x: safeStart.x, y: safeStart.y}];
+    
+    // Если запускаем с конкретной структурой, инициализируем змею с нужной длиной
+    if (isSpecificStructureMode) {
+        initializeSnakeForLevel(specificLevel);
+    } else {
+        // Обычная инициализация для первого уровня
+        const safeStart = findSafeStartPosition();
+        snake = [{x: safeStart.x, y: safeStart.y}];
+    }
+    
     randomFood();
     setInterval(gameLoop, gameSpeed);
     drawGame();
