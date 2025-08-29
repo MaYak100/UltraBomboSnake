@@ -26,7 +26,7 @@ let previewObstacles = [];
 let showPreview = false;
 let nextStructureFunction = null;
 let immaterialTurns = 0; 
-const IMMATERIAL_TURNS_COUNT = 4; 
+const IMMATERIAL_TURNS_COUNT = 1000; 
 let lastSnakeHead = null; 
 
 // Поиск безопасной позиции для еды
