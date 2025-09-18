@@ -407,8 +407,6 @@ function showWinScreen() {
     winScreen.innerHTML = `
         <h2 style="color: #f39c12;">🎉 Победа! 🎉</h2>
         <p>Поздравляем! Ты прошел все уровни!</p>
-        <p>Не, всем и так понятно, что ты отбитый, но не на столько же?</p>
-        <p>Сделай скрин и скинь Маяку</p>
         <button class="restart-btn" onclick="restartGame()">Играть снова</button>
     `;
     
@@ -457,6 +455,30 @@ function restartGame() {
     randomFood();
 }
 
+// Переменные для обработки свайпов
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+const minSwipeDistance = 50;
+
+// Функция для добавления направления в очередь
+function addDirectionToQueue(newDirection) {
+    let currentDx = dx;
+    let currentDy = dy;
+    if (inputQueue.length > 0) {
+        const lastCommand = inputQueue[inputQueue.length - 1];
+        currentDx = lastCommand.dx;
+        currentDy = lastCommand.dy;
+    }
+
+    if ((dx === 0 && dy === 0) || !(newDirection.dx === -currentDx && newDirection.dy === -currentDy)) {
+        if (inputQueue.length < 3) {
+            inputQueue.push(newDirection);
+        }
+    }
+}
+
 // Обработка клавиатурного ввода
 document.addEventListener('keydown', (e) => {
     if (e.key === 'R' || e.key === 'r' || e.key === 'Enter' || 
@@ -488,19 +510,65 @@ document.addEventListener('keydown', (e) => {
     }
 
     if (newDirection) {
-        let currentDx = dx;
-        let currentDy = dy;
-        if (inputQueue.length > 0) {
-            const lastCommand = inputQueue[inputQueue.length - 1];
-            currentDx = lastCommand.dx;
-            currentDy = lastCommand.dy;
-        }
+        addDirectionToQueue(newDirection);
+    }
+});
 
-        if ((dx === 0 && dy === 0) || !(newDirection.dx === -currentDx && newDirection.dy === -currentDy)) {
-            if (inputQueue.length < 3) {
-                inputQueue.push(newDirection);
-            }
+// Обработка свайпов для мобильных устройств
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    touchEndX = touch.clientX;
+    touchEndY = touch.clientY;
+    
+    if (!gameRunning) return;
+    
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    
+    // Определяем направление свайпа
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Горизонтальный свайп
+        if (deltaX > minSwipeDistance) {
+            // Свайп вправо
+            addDirectionToQueue({dx: 1, dy: 0});
+        } else if (deltaX < -minSwipeDistance) {
+            // Свайп влево
+            addDirectionToQueue({dx: -1, dy: 0});
         }
+    } else {
+        // Вертикальный свайп
+        if (deltaY > minSwipeDistance) {
+            // Свайп вниз
+            addDirectionToQueue({dx: 0, dy: 1});
+        } else if (deltaY < -minSwipeDistance) {
+            // Свайп вверх
+            addDirectionToQueue({dx: 0, dy: -1});
+        }
+    }
+}, { passive: false });
+
+// Предотвращаем зум и скролл при касании canvas
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+}, { passive: false });
+
+// Обработка кнопок перезапуска для мобильных устройств
+document.addEventListener('touchstart', (e) => {
+    if (!gameRunning && (e.target.classList.contains('restart-btn') || 
+        e.target.closest('.restart-btn'))) {
+        const winScreen = document.getElementById('winScreen');
+        if (winScreen && winScreen.style.display === 'block') {
+            return;
+        }
+        restartGame();
     }
 });
 

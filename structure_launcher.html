@@ -15,6 +15,11 @@
             padding: 20px;
             min-height: 100vh;
             color: #fff;
+            /* Предотвращаем зум на мобильных устройствах */
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         .container {
@@ -39,6 +44,79 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
+        }
+        
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+                border-radius: 16px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .control-group {
+                padding: 15px;
+            }
+            
+            .launch-btn {
+                padding: 12px;
+                font-size: 16px;
+            }
+            
+            .info {
+                padding: 15px;
+            }
+            
+            .snake-preview {
+                padding: 8px;
+            }
+            
+            .snake-segment {
+                width: 10px;
+                height: 10px;
+                margin: 1px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .control-group {
+                padding: 12px;
+            }
+            
+            .launch-btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .snake-segment {
+                width: 8px;
+                height: 8px;
+            }
         }
         
         .control-group {
