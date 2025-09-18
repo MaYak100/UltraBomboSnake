@@ -706,10 +706,30 @@ function calculateSnakeLengthForLevel(level) {
     return 1 + segmentsForScore; // +1 для начального сегмента
 }
 
+// Функция для настройки размеров canvas
+function setupCanvas() {
+    const canvasStyle = window.getComputedStyle(canvas);
+    const displayWidth = parseInt(canvasStyle.width);
+    const displayHeight = parseInt(canvasStyle.height);
+    
+    // Устанавливаем внутренние размеры canvas
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+    
+    // Обновляем tileCount на основе нового размера
+    tileCount = Math.floor(canvas.width / gridSize);
+}
+
 // Инициализация игры после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
-    // Обновляем tileCount после загрузки canvas
-    tileCount = canvas.width / gridSize;
+    // Настраиваем canvas
+    setupCanvas();
+    
+    // Обновляем размеры при изменении окна
+    window.addEventListener('resize', () => {
+        setupCanvas();
+        drawGame();
+    });
     
     // Проверяем, есть ли параметры для запуска с конкретной структурой
     const launchSpecific = localStorage.getItem('launchSpecificStructure');
