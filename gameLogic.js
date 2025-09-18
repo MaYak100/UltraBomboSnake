@@ -460,7 +460,7 @@ let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
 let touchEndY = 0;
-const minSwipeDistance = 50;
+const minSwipeDistance = 40;
 
 // Функция для добавления направления в очередь
 function addDirectionToQueue(newDirection) {

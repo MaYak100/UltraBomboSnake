@@ -11,29 +11,33 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>🐍 Маяковская Змейка</h1>
-        
-        <div class="game-stats">
-            <div class="stat-item">
-                <span class="stat-label">Счёт</span>
-                <span class="stat-value score-value" id="score">0</span>
+        <div class="game-left">
+            <h1>🐍 Маяковская Змейка</h1>
+            
+            <div class="game-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Счёт</span>
+                    <span class="stat-value score-value" id="score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Уровень</span>
+                    <span class="stat-value level-value" id="level">1</span>
+                </div>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Уровень</span>
-                <span class="stat-value level-value" id="level">1</span>
-            </div>
+            
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
         </div>
         
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        
-        <div class="controls">
-            <strong>Управление:</strong><br>
-            <span class="desktop-controls">Стрелки или WASD<br></span>
-            <span class="mobile-controls">Свайпы по игровому полю<br></span>
-            🏆 Цель: 250 очков и все пять уровней<br>
-            🔄 Новые препятствия каждые 50 очков<br>
-            <span class="desktop-controls"><strong>R</strong>, <strong>Enter</strong> - перезапуск после Game Over</span>
-            <span class="mobile-controls"><strong>Нажмите кнопку</strong> - перезапуск после Game Over</span>
+        <div class="game-right">
+            <div class="controls">
+                <strong>Управление:</strong><br>
+                <span class="desktop-controls">Стрелки или WASD<br></span>
+                <span class="mobile-controls">Свайпы по игровому полю<br></span>
+                🏆 Цель: 250 очков и все пять уровней<br>
+                🔄 Новые препятствия каждые 50 очков<br>
+                <span class="desktop-controls"><strong>R</strong>, <strong>Enter</strong> - перезапуск после Game Over</span>
+                <span class="mobile-controls"><strong>Нажмите кнопку</strong> - перезапуск после Game Over</span>
+            </div>
         </div>
         
         <div class="game-over" id="gameOver">
