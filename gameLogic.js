@@ -533,7 +533,7 @@ document.addEventListener('touchend', (e) => {
     
     // Проверяем, что это свайп, а не случайное касание
     if (Math.abs(deltaX) > minSwipeDistance || Math.abs(deltaY) > minSwipeDistance) {
-        // Предотвращаем скролл страницы только для игровых свайпов
+        // ВСЕГДА предотвращаем скролл для любых свайпов
         e.preventDefault();
         
         // Определяем направление свайпа
@@ -557,6 +557,11 @@ document.addEventListener('touchend', (e) => {
             }
         }
     }
+}, { passive: false });
+
+// Предотвращаем скролл страницы при любых касаниях
+document.addEventListener('touchmove', (e) => {
+    e.preventDefault();
 }, { passive: false });
 
 // Предотвращаем зум и скролл при касании canvas
@@ -708,16 +713,12 @@ function calculateSnakeLengthForLevel(level) {
 
 // Функция для настройки размеров canvas
 function setupCanvas() {
-    const canvasStyle = window.getComputedStyle(canvas);
-    const displayWidth = parseInt(canvasStyle.width);
-    const displayHeight = parseInt(canvasStyle.height);
+    // Фиксированный размер игрового поля - всегда 400x400 внутри
+    canvas.width = 400;
+    canvas.height = 400;
     
-    // Устанавливаем внутренние размеры canvas
-    canvas.width = displayWidth;
-    canvas.height = displayHeight;
-    
-    // Обновляем tileCount на основе нового размера
-    tileCount = Math.floor(canvas.width / gridSize);
+    // tileCount остается фиксированным для стабильности игры
+    tileCount = 20;
 }
 
 // Инициализация игры после загрузки DOM
