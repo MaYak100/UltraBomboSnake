@@ -49,6 +49,21 @@ body {
     text-align: center;
 }
 
+/* Сброс мобильных стилей для десктопа */
+.game-container {
+    display: block;
+}
+
+.game-left {
+    flex: none;
+    display: block;
+}
+
+.game-right {
+    flex: none;
+    margin-top: 0;
+}
+
 .game-container:hover {
     transform: translateY(-2px);
     box-shadow: 
@@ -288,20 +303,38 @@ h1 {
 /* Мобильные устройства - планшеты */
 @media (max-width: 768px) {
     body {
-        overflow-y: auto;
+        overflow: hidden;
         padding: 0.8rem;
-        align-items: flex-start;
+        align-items: center;
+        justify-content: center;
         min-height: 100vh;
+        height: 100vh;
+        touch-action: manipulation;
     }
     
     .game-container {
         padding: 1.2rem;
         margin: 0;
-        max-width: 95vw;
-        width: 100%;
-        max-height: none;
-        overflow-y: visible;
+        width: calc(100vw - 1.6rem);
+        height: calc(100vh - 1.6rem);
+        overflow: visible;
         border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .game-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .game-right {
+        flex: 0 0 auto;
+        margin-top: 1rem;
     }
     
     h1 {
@@ -366,13 +399,35 @@ h1 {
 @media (max-width: 480px) {
     body {
         padding: 0.5rem;
-        align-items: flex-start;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        height: 100vh;
+        touch-action: manipulation;
     }
     
     .game-container {
         padding: 1rem;
         border-radius: 16px;
         margin: 0;
+        width: calc(100vw - 1rem);
+        height: calc(100vh - 1rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .game-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .game-right {
+        flex: 0 0 auto;
+        margin-top: 0.8rem;
     }
     
     h1 {
@@ -519,11 +574,34 @@ h1 {
 @media (max-width: 360px) {
     body {
         padding: 0.4rem;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        height: 100vh;
+        touch-action: manipulation;
     }
     
     .game-container {
         padding: 0.8rem;
         border-radius: 14px;
+        width: calc(100vw - 0.8rem);
+        height: calc(100vh - 0.8rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .game-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .game-right {
+        flex: 0 0 auto;
+        margin-top: 0.6rem;
     }
     
     h1 {

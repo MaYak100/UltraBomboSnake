@@ -515,15 +515,13 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Обработка свайпов для мобильных устройств
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
+document.addEventListener('touchstart', (e) => {
     const touch = e.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
-}, { passive: false });
+}, { passive: true });
 
-canvas.addEventListener('touchend', (e) => {
-    e.preventDefault();
+document.addEventListener('touchend', (e) => {
     const touch = e.changedTouches[0];
     touchEndX = touch.clientX;
     touchEndY = touch.clientY;
@@ -533,24 +531,30 @@ canvas.addEventListener('touchend', (e) => {
     const deltaX = touchEndX - touchStartX;
     const deltaY = touchEndY - touchStartY;
     
-    // Определяем направление свайпа
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        // Горизонтальный свайп
-        if (deltaX > minSwipeDistance) {
-            // Свайп вправо
-            addDirectionToQueue({dx: 1, dy: 0});
-        } else if (deltaX < -minSwipeDistance) {
-            // Свайп влево
-            addDirectionToQueue({dx: -1, dy: 0});
-        }
-    } else {
-        // Вертикальный свайп
-        if (deltaY > minSwipeDistance) {
-            // Свайп вниз
-            addDirectionToQueue({dx: 0, dy: 1});
-        } else if (deltaY < -minSwipeDistance) {
-            // Свайп вверх
-            addDirectionToQueue({dx: 0, dy: -1});
+    // Проверяем, что это свайп, а не случайное касание
+    if (Math.abs(deltaX) > minSwipeDistance || Math.abs(deltaY) > minSwipeDistance) {
+        // Предотвращаем скролл страницы только для игровых свайпов
+        e.preventDefault();
+        
+        // Определяем направление свайпа
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // Горизонтальный свайп
+            if (deltaX > minSwipeDistance) {
+                // Свайп вправо
+                addDirectionToQueue({dx: 1, dy: 0});
+            } else if (deltaX < -minSwipeDistance) {
+                // Свайп влево
+                addDirectionToQueue({dx: -1, dy: 0});
+            }
+        } else {
+            // Вертикальный свайп
+            if (deltaY > minSwipeDistance) {
+                // Свайп вниз
+                addDirectionToQueue({dx: 0, dy: 1});
+            } else if (deltaY < -minSwipeDistance) {
+                // Свайп вверх
+                addDirectionToQueue({dx: 0, dy: -1});
+            }
         }
     }
 }, { passive: false });
