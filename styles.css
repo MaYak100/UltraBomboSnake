@@ -160,9 +160,33 @@ h1 {
     .desktop-controls {
         display: none;
     }
-    
+
     .mobile-controls {
         display: inline;
+    }
+}
+
+.overlay-hint {
+    margin-top: 1.25rem;
+    font-size: clamp(0.8rem, 2.8vw, 1rem);
+    opacity: 0.85;
+}
+
+.game-over .desktop-controls {
+    display: block;
+}
+
+.game-over .mobile-controls {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .game-over .desktop-controls {
+        display: none;
+    }
+
+    .game-over .mobile-controls {
+        display: block;
     }
 }
 

@@ -408,6 +408,8 @@ function showWinScreen() {
         <h2 style="color: #f39c12;">🎉 Победа! 🎉</h2>
         <p>Поздравляем! Ты прошел все уровни!</p>
         <button class="restart-btn" onclick="restartGame()">Играть снова</button>
+        <p class="desktop-controls overlay-hint">Нажмите <strong>R</strong>, <strong>Enter</strong> или <strong>К</strong>, чтобы начать заново</p>
+        <p class="mobile-controls overlay-hint">Нажмите кнопку выше, чтобы сыграть ещё</p>
     `;
     
     document.body.appendChild(winScreen);
@@ -438,9 +440,10 @@ function restartGame() {
     immaterialTurns = 0;
     isNewStructureImmaterial = false;
     lastSnakeHead = null;
-    
+
     gameRunning = true;
-    
+    resetTouchTracking();
+
     initializeObstacles();
     
     // Если в режиме конкретной структуры, инициализируем змею с нужной длиной
@@ -460,7 +463,32 @@ let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
 let touchEndY = 0;
+let lastSwipeX = 0;
+let lastSwipeY = 0;
+let activeTouchId = null;
+let hasDirectionalSwipe = false;
 const minSwipeDistance = 40;
+const continuousSwipeDistance = 26;
+
+function resetTouchTracking() {
+    activeTouchId = null;
+    hasDirectionalSwipe = false;
+    touchStartX = 0;
+    touchStartY = 0;
+    touchEndX = 0;
+    touchEndY = 0;
+    lastSwipeX = 0;
+    lastSwipeY = 0;
+}
+
+function findTouchById(touchList, identifier) {
+    for (let i = 0; i < touchList.length; i++) {
+        if (touchList[i].identifier === identifier) {
+            return touchList[i];
+        }
+    }
+    return null;
+}
 
 // Функция для добавления направления в очередь
 function addDirectionToQueue(newDirection) {
@@ -470,6 +498,10 @@ function addDirectionToQueue(newDirection) {
         const lastCommand = inputQueue[inputQueue.length - 1];
         currentDx = lastCommand.dx;
         currentDy = lastCommand.dy;
+    }
+
+    if (newDirection.dx === currentDx && newDirection.dy === currentDy) {
+        return;
     }
 
     if ((dx === 0 && dy === 0) || !(newDirection.dx === -currentDx && newDirection.dy === -currentDy)) {
@@ -514,60 +546,115 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Обработка свайпов для мобильных устройств
-document.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
+function shouldIgnoreTouchStart(target) {
+    if (!gameRunning) {
+        return true;
+    }
+
+    return !!target.closest('.restart-btn');
+}
+
+function handleTouchStart(e) {
+    if (activeTouchId !== null) return;
+
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    if (shouldIgnoreTouchStart(e.target)) {
+        return;
+    }
+
+    activeTouchId = touch.identifier;
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
-}, { passive: true });
+    lastSwipeX = touch.clientX;
+    lastSwipeY = touch.clientY;
+    hasDirectionalSwipe = false;
+}
 
-document.addEventListener('touchend', (e) => {
-    const touch = e.changedTouches[0];
-    touchEndX = touch.clientX;
-    touchEndY = touch.clientY;
-    
-    if (!gameRunning) return;
-    
-    const deltaX = touchEndX - touchStartX;
-    const deltaY = touchEndY - touchStartY;
-    
-    // Проверяем, что это свайп, а не случайное касание
-    if (Math.abs(deltaX) > minSwipeDistance || Math.abs(deltaY) > minSwipeDistance) {
-        // ВСЕГДА предотвращаем скролл для любых свайпов
-        e.preventDefault();
-        
-        // Определяем направление свайпа
+function handleTouchMove(e) {
+    e.preventDefault();
+
+    if (activeTouchId === null) {
+        return;
+    }
+
+    const touch = findTouchById(e.changedTouches, activeTouchId);
+    if (!touch) return;
+
+    if (!gameRunning) {
+        return;
+    }
+
+    const deltaX = touch.clientX - lastSwipeX;
+    const deltaY = touch.clientY - lastSwipeY;
+    const threshold = hasDirectionalSwipe ? continuousSwipeDistance : minSwipeDistance;
+
+    if (Math.abs(deltaX) >= threshold || Math.abs(deltaY) >= threshold) {
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            // Горизонтальный свайп
-            if (deltaX > minSwipeDistance) {
-                // Свайп вправо
+            if (deltaX > threshold) {
                 addDirectionToQueue({dx: 1, dy: 0});
-            } else if (deltaX < -minSwipeDistance) {
-                // Свайп влево
+                hasDirectionalSwipe = true;
+            } else if (deltaX < -threshold) {
                 addDirectionToQueue({dx: -1, dy: 0});
+                hasDirectionalSwipe = true;
             }
         } else {
-            // Вертикальный свайп
-            if (deltaY > minSwipeDistance) {
-                // Свайп вниз
+            if (deltaY > threshold) {
                 addDirectionToQueue({dx: 0, dy: 1});
-            } else if (deltaY < -minSwipeDistance) {
-                // Свайп вверх
+                hasDirectionalSwipe = true;
+            } else if (deltaY < -threshold) {
                 addDirectionToQueue({dx: 0, dy: -1});
+                hasDirectionalSwipe = true;
+            }
+        }
+
+        if (hasDirectionalSwipe) {
+            lastSwipeX = touch.clientX;
+            lastSwipeY = touch.clientY;
+        }
+    }
+}
+
+function handleTouchEnd(e) {
+    if (activeTouchId === null) return;
+
+    const touch = findTouchById(e.changedTouches, activeTouchId);
+    if (!touch) return;
+
+    touchEndX = touch.clientX;
+    touchEndY = touch.clientY;
+
+    if (gameRunning && !hasDirectionalSwipe) {
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+
+        if (Math.abs(deltaX) > minSwipeDistance || Math.abs(deltaY) > minSwipeDistance) {
+            e.preventDefault();
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (deltaX > minSwipeDistance) {
+                    addDirectionToQueue({dx: 1, dy: 0});
+                } else if (deltaX < -minSwipeDistance) {
+                    addDirectionToQueue({dx: -1, dy: 0});
+                }
+            } else {
+                if (deltaY > minSwipeDistance) {
+                    addDirectionToQueue({dx: 0, dy: 1});
+                } else if (deltaY < -minSwipeDistance) {
+                    addDirectionToQueue({dx: 0, dy: -1});
+                }
             }
         }
     }
-}, { passive: false });
 
-// Предотвращаем скролл страницы при любых касаниях
-document.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-}, { passive: false });
+    resetTouchTracking();
+}
 
-// Предотвращаем зум и скролл при касании canvas
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-}, { passive: false });
+document.addEventListener('touchstart', handleTouchStart, { passive: true });
+document.addEventListener('touchmove', handleTouchMove, { passive: false });
+document.addEventListener('touchend', handleTouchEnd, { passive: false });
+document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
 // Обработка кнопок перезапуска для мобильных устройств
 document.addEventListener('touchstart', (e) => {
