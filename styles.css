@@ -155,14 +155,30 @@ h1 {
     display: none;
 }
 
+.desktop-only {
+    display: block;
+}
+
+.mobile-only {
+    display: none;
+}
+
 /* На мобильных устройствах показываем только мобильные элементы управления */
 @media (max-width: 768px) {
     .desktop-controls {
         display: none;
     }
-    
+
     .mobile-controls {
         display: inline;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+
+    .mobile-only {
+        display: block;
     }
 }
 
@@ -205,6 +221,16 @@ h1 {
 .game-over p {
     margin: 0.5rem 0;
     font-size: 1.1rem;
+}
+
+.game-over .game-over-hint {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.game-over .game-over-hint + .game-over-hint {
+    margin-top: 0.6rem;
 }
 
 .restart-btn {
@@ -363,6 +389,10 @@ h1 {
 
     .game-over h2 {
         font-size: clamp(1.3rem, 4vw, 1.5rem);
+    }
+
+    .game-over .game-over-hint {
+        font-size: 0.85rem;
     }
 
     .restart-btn {

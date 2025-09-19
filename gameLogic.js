@@ -408,8 +408,10 @@ function showWinScreen() {
         <h2 style="color: #f39c12;">🎉 Победа! 🎉</h2>
         <p>Поздравляем! Ты прошел все уровни!</p>
         <button class="restart-btn" onclick="restartGame()">Играть снова</button>
+        <p class="game-over-hint desktop-only">Или нажмите <strong>R</strong>, <strong>Enter</strong> или <strong>К</strong>, чтобы начать заново</p>
+        <p class="game-over-hint mobile-only">Или просто коснитесь кнопки выше, чтобы сыграть ещё</p>
     `;
-    
+
     document.body.appendChild(winScreen);
 }
 
@@ -545,7 +547,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Обработка свайпов для мобильных устройств
-canvas.addEventListener('touchstart', (e) => {
+function handleTouchStart(e) {
     if (activeTouchId !== null) return;
 
     const touch = e.changedTouches[0];
@@ -557,15 +559,15 @@ canvas.addEventListener('touchstart', (e) => {
     lastSwipeX = touch.clientX;
     lastSwipeY = touch.clientY;
     hasDirectionalSwipe = false;
-}, { passive: true });
+}
 
-canvas.addEventListener('touchmove', (e) => {
+function handleTouchMove(e) {
+    e.preventDefault();
+
     if (activeTouchId === null) return;
 
     const touch = findTouchById(e.changedTouches, activeTouchId);
     if (!touch) return;
-
-    e.preventDefault();
 
     if (!gameRunning) {
         return;
@@ -599,7 +601,7 @@ canvas.addEventListener('touchmove', (e) => {
             lastSwipeY = touch.clientY;
         }
     }
-}, { passive: false });
+}
 
 function handleTouchEnd(e) {
     if (activeTouchId === null) return;
@@ -636,17 +638,14 @@ function handleTouchEnd(e) {
     resetTouchTracking();
 }
 
+document.addEventListener('touchstart', handleTouchStart, { passive: true });
+document.addEventListener('touchmove', handleTouchMove, { passive: false });
 document.addEventListener('touchend', handleTouchEnd, { passive: false });
 document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-// Предотвращаем скролл страницы при любых касаниях
-document.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-}, { passive: false });
-
 // Обработка кнопок перезапуска для мобильных устройств
 document.addEventListener('touchstart', (e) => {
-    if (!gameRunning && (e.target.classList.contains('restart-btn') || 
+    if (!gameRunning && (e.target.classList.contains('restart-btn') ||
         e.target.closest('.restart-btn'))) {
         const winScreen = document.getElementById('winScreen');
         if (winScreen && winScreen.style.display === 'block') {
@@ -654,7 +653,7 @@ document.addEventListener('touchstart', (e) => {
         }
         restartGame();
     }
-});
+}, { passive: true });
 
 // Основной игровой цикл
 function gameLoop() {

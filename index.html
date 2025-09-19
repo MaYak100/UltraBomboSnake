@@ -32,7 +32,7 @@
             <div class="controls">
                 <strong>Управление:</strong><br>
                 <span class="desktop-controls">Стрелки или WASD<br></span>
-                <span class="mobile-controls">Ведите пальцем по игровому полю без отрыва<br></span>
+                <span class="mobile-controls">Ведите пальцем по экрану без отрыва<br></span>
                 🏆 Цель: 250 очков и все пять уровней<br>
                 🔄 Новые препятствия каждые 50 очков<br>
                 <span class="desktop-controls"><strong>R</strong>, <strong>Enter</strong> - перезапуск после Game Over</span>
@@ -44,8 +44,11 @@
             <h2>Игра окончена!</h2>
             <p>Ваш счёт: <span id="finalScore" class="score-value">0</span></p>
             <button class="restart-btn" onclick="restartGame()">Начать заново</button>
-            <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+            <p class="game-over-hint desktop-only">
                 Или нажмите <strong>R</strong>, <strong>Enter</strong> или <strong>К</strong> для перезапуска
+            </p>
+            <p class="game-over-hint mobile-only">
+                Или просто коснитесь кнопки выше, чтобы начать заново
             </p>
         </div>
     </div>
